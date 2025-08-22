@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Account Google Drive Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .header h1 {
+            color: #4285f4;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #4285f4;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .setup-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4285f4;
+        }
+        
+        .method-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        
+        .method-card:hover {
+            border-color: #4285f4;
+            transform: translateY(-2px);
+        }
+        
+        .method-card h3 {
+            color: #4285f4;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .pros, .cons {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .pros {
+            background: #d4f4dd;
+            border-left: 4px solid #34a853;
+        }
+        
+        .cons {
+            background: #fce8e6;
+            border-left: 4px solid #ea4335;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ea4335, #d93025);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #34a853, #137333);
+        }
+        
+        .account-manager {
+            display: grid;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .account-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+        
+        .account-item.connected {
+            border-color: #34a853;
+            background: linear-gradient(135deg, #f0f8f0, #e8f5e8);
+        }
+        
+        .account-item.disconnected {
+            border-color: #ea4335;
+            background: linear-gradient(135deg, #fef5f5, #fce8e6);
+        }
+        
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .account-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .account-details {
+            flex-grow: 1;
+        }
+        
+        .account-email {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .account-status {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .account-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .storage-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+        
+        .storage-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .card-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        
+        .card-info h3 {
+            color: #4285f4;
+            margin-bottom: 5px;
+        }
+        
+        .card-info p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .storage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .storage-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .storage-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .storage-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34a853, #fbbc04, #ea4335);
+            transition: width 0.3s ease;
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .error {
+            background: #fce8e6;
+            color: #d93025;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .summary-stats {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Multi-Account Google Drive Checker</h1>
+            <p>Quản lý và kiểm tra nhiều tài khoản Google Drive cùng lúc</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">📊 Tổng quan</div>
+            <div class="tab" onclick="switchTab('setup')">⚙️ Thiết lập</div>
+            <div class="tab" onclick="switchTab('accounts')">👥 Quản lý tài khoản</div>
+            <div class="tab" onclick="switchTab('results')">📈 Kết quả</div>
+        </div>
+
+        <!-- Tab Tổng quan -->
+        <div id="overview" class="tab-content active">
+            <h2>🎯 Các phương pháp kiểm tra nhiều tài khoản</h2>
+            
+            <div class="method-card">
+                <h3>🔐 1. OAuth 2.0 - Từng người đăng nhập</h3>
+                <p>Mỗi người sở hữu tài khoản tự đăng nhập và cấp quyền</p>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <strong>✅ Ưu điểm:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Hoàn toàn hợp pháp và an toàn</li>
+                            <li>Tuân thủ chính sách Google</li>
+                            <li>Không cần mật khẩu</li>
+                            <li>Người dùng kiểm soát quyền truy cập</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <strong>❌ Nhược điểm:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Cần sự tham gia của từng người</li>
+                            <li>Không thể tự động hoàn toàn</li>
+                            <li>Token có thể hết hạn</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="switchTab('accounts')">Sử dụng phương pháp này</button>
+            </div>
+
+            <div class="method-card">
+                <h3>🏢 2. Google Workspace Admin</h3>
+                <p>Sử dụng quyền Admin để truy cập tất cả tài khoản trong tổ chức</p>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <strong>✅ Ưu điểm:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Truy cập tất cả tài khoản doanh nghiệp</li>
+                            <li>Tự động và nhanh chóng</li>
+                            <li>Báo cáo tổng hợp</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <strong>❌ Nhược điểm:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Chỉ cho Google Workspace</li>
+                            <li>Cần quyền Super Admin</li>
+                            <li>Chi phí subscription</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="showWorkspaceInfo()">Tìm hiểu thêm</button>
+            </div>
+
+            <div class="method-card">
+                <h3>📝 3. Google Apps Script</h3>
+                <p>Tạo script chạy trên Google's server để kiểm tra multiple accounts</p>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <strong>✅ Ưu điểm:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Chạy trên server Google</li>
+                            <li>Không giới hạn CORS</li>
+                            <li>Có thể tự động hóa</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <strong>❌ Nhược điểm:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Cần kiến thức lập trình</li>
+                            <li>Giới hạn runtime</li>
+                            <li>Vẫn cần OAuth cho từng account</li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="showScriptInfo()">Xem code mẫu</button>
+            </div>
+        </div>
+
+        <!-- Tab Thiết lập -->
+        <div id="setup" class="tab-content">
+            <div class="setup-section">
+                <h3>⚙️ Thiết lập OAuth 2.0 cho Multi-Account</h3>
+                <div class="form-group">
+                    <label for="clientId">Google OAuth Client ID:</label>
+                    <input type="text" id="clientId" placeholder="Nhập Client ID từ Google Cloud Console...">
+                </div>
+                
+                <div class="warning">
+                    <strong>📋 Hướng dẫn thiết lập:</strong>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>Truy cập Google Cloud Console</li>
+                        <li>Tạo OAuth 2.0 Client ID</li>
+                        <li>Thêm domain vào authorized origins</li>
+                        <li>Bật các API cần thiết: Drive, People, OAuth2</li>
+                    </ol>
+                </div>
+
+                <button class="btn" onclick="initializeMultiAuth()">🔧 Khởi tạo Multi-Auth</button>
+            </div>
+        </div>
+
+        <!-- Tab Quản lý tài khoản -->
+        <div id="accounts" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>👥 Quản lý tài khoản</h2>
+                <button class="btn" onclick="addNewAccount()">➕ Thêm tài khoản</button>
+            </div>
+
+            <div id="accountManager" class="account-manager">
+                <!-- Accounts sẽ được thêm động -->
+            </div>
+
+            <div style="margin: 30px 0;">
+                <button class="btn btn-success" onclick="checkAllAccounts()">🔄 Kiểm tra tất cả</button>
+                <button class="btn btn-secondary" onclick="exportResults()">📊 Xuất báo cáo</button>
+                <button class="btn btn-danger" onclick="clearAllAccounts()">🗑️ Xóa tất cả</button>
+            </div>
+        </div>
+
+        <!-- Tab Kết quả -->
+        <div id="results" class="tab-content">
+            <div id="summaryStats" style="display: none;"></div>
+            <div id="resultsGrid" class="results-grid"></div>
+        </div>
+
+        <div id="messageArea"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gapi/2.0.2/gapi.min.js"></script>
+    <script>
+        let accounts = [];
+        let currentAccountIndex = 0;
+        let isInitialized = false;
+
+        // Khởi tạo
+        function switchTab(tabName) {
+            // Ẩn tất cả tab content
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Hiện tab được chọn
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function initializeMultiAuth() {
+            const clientId = document.getElementById('clientId').value.trim();
+            
+            if (!clientId) {
+                showMessage('Vui lòng nhập Client ID trước!', 'error');
+                return;
+            }
+
+            window.gapi.load('auth2', () => {
+                window.gapi.auth2.init({
+                    client_id: clientId,
+                    scope: 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
+                }).then(() => {
+                    isInitialized = true;
+                    showMessage('✅ Khởi tạo thành công! Bây giờ có thể thêm tài khoản.', 'success');
+                }).catch(error => {
+                    showMessage('❌ Lỗi khởi tạo: ' + error.error, 'error');
+                });
+            });
+
+            window.gapi.load('client', () => {
+                window.gapi.client.init({
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                });
+            });
+        }
+
+        function addNewAccount() {
+            if (!isInitialized) {
+                showMessage('Vui lòng thiết lập OAuth trước!', 'error');
+                switchTab('setup');
+                return;
+            }
+
+            const accountId = 'account_' + Date.now();
+            const newAccount = {
+                id: accountId,
+                email: '',
+                name: '',
+                avatar: '',
+                status: 'disconnected',
+                data: null,
+                authInstance: null
+            };
+
+            accounts.push(newAccount);
+            renderAccountManager();
+        }
+
+        function renderAccountManager() {
+            const container = document.getElementById('accountManager');
+            
+            if (accounts.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h3>Chưa có tài khoản nào</h3>
+                        <p>Nhấn "Thêm tài khoản" để bắt đầu</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = accounts.map(account => `
+                <div class="account-item ${account.status}">
+                    <div class="account-info">
+                        <div class="account-avatar">
+                            ${account.avatar ? `<img src="${account.avatar}" style="width: 100%; height: 100%; border-radius: 50%;">` : '👤'}
+                        </div>
+                        <div class="account-details">
+                            <div class="account-email">${account.email || 'Chưa kết nối'}</div>
+                            <div class="account-status">
+                                ${account.status === 'connected' ? '✅ Đã kết nối' : '❌ Chưa kết nối'}
+                                ${account.name ? ` - ${account.name}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="account-actions">
+                        ${account.status === 'disconnected' ? 
+                            `<button class="btn" onclick="connectAccount('${account.id}')">🔐 Kết nối</button>` :
+                            `<button class="btn btn-secondary" onclick="disconnectAccount('${account.id}')">🚪 Ngắt kết nối</button>`
+                        }
+                        <button class="btn btn-danger" onclick="removeAccount('${account.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function connectAccount(accountId) {
+            const account = accounts.find(a => a.id === accountId);
+            if (!account) return;
+
+            try {
+                const authInstance = window.gapi.auth2.getAuthInstance();
+                const user = await authInstance.signIn();
+                
+                const profile = user.getBasicProfile();
+                account.email = profile.getEmail();
+                account.name = profile.getName();
+                account.avatar = profile.getImageUrl();
+                account.status = 'connected';
+                account.authInstance = user;
+
+                renderAccountManager();
+                showMessage(`✅ Đã kết nối tài khoản ${account.email}`, 'success');
+                
+            } catch (error) {
+                showMessage(`❌ Lỗi kết nối tài khoản: ${error.error || error.message}`, 'error');
+            }
+        }
+
+        function disconnectAccount(accountId) {
+            const account = accounts.find(a => a.id === accountId);
+            if (!account) return;
+
+            account.status = 'disconnected';
+            account.email = '';
+            account.name = '';
+            account.avatar = '';
+            account.data = null;
+            account.authInstance = null;
+
+            renderAccountManager();
+            showMessage('Đã ngắt kết nối tài khoản', 'success');
+        }
+
+        function removeAccount(accountId) {
+            if (confirm('Bạn có chắc muốn xóa tài khoản này?')) {
+                accounts = accounts.filter(a => a.id !== accountId);
+                renderAccountManager();
+                showMessage('Đã xóa tài khoản', 'success');
+            }
+        }
+
+        function clearAllAccounts() {
+            if (confirm('Bạn có chắc muốn xóa tất cả tài khoản?')) {
+                accounts = [];
+                renderAccountManager();
+                document.getElementById('resultsGrid').innerHTML = '';
+                showMessage('Đã xóa tất cả tài khoản', 'success');
+            }
+        }
+
+        async function checkAllAccounts() {
+            const connectedAccounts = accounts.filter(a => a.status === 'connected');
+            
+            if (connectedAccounts.length === 0) {
+                showMessage('Không có tài khoản nào được kết nối!', 'error');
+                return;
+            }
+
+            switchTab('results');
+            const resultsGrid = document.getElementById('resultsGrid');
+            resultsGrid.innerHTML = '<div class="loading">🔄 Đang kiểm tra tất cả tài khoản...</div>';
+
+            let results = [];
+            
+            for (const account of connectedAccounts) {
+                try {
+                    // Giả lập việc kiểm tra Drive API
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Tạo dữ liệu demo cho mỗi tài khoản
+                    const mockData = generateMockData(account.email);
+                    account.data = mockData;
+                    results.push(account);
+                    
+                } catch (error) {
+                    console.error(`Error checking account ${account.email}:`, error);
+                    account.data = { error: error.message };
+                }
+            }
+
+            renderResults(results);
+            renderSummaryStats(results);
+        }
+
+        function generateMockData(email) {
+            const plans = [
+                { name: 'Miễn phí (15GB)', size: 15 * 1024 * 1024 * 1024 },
+                { name: 'Google One (100GB)', size: 100 * 1024 * 1024 * 1024 },
+                { name: 'Google One (200GB)', size: 200 * 1024 * 1024 * 1024 },
+                { name: 'Google One (2TB)', size: 2 * 1024 * 1024 * 1024 * 1024 }
+            ];
+            
+            const randomPlan = plans[Math.floor(Math.random() * plans.length)];
+            const usedPercentage = 0.1 + Math.random() * 0.8;
+            const totalUsed = randomPlan.size * usedPercentage;
+            
+            return {
+                totalStorage: randomPlan.size,
+                usedStorage: totalUsed,
+                planType: randomPlan.name,
+                driveUsage: totalUsed * (0.5 + Math.random() * 0.4),
+                gmailUsage: totalUsed * (0.1 + Math.random() * 0.3),
+                photosUsage: totalUsed * (0.05 + Math.random() * 0.2)
+            };
+        }
+
+        function renderResults(results) {
+            const resultsGrid = document.getElementById('resultsGrid');
+            
+            resultsGrid.innerHTML = results.map(account => {
+                if (account.data.error) {
+                    return `
+                        <div class="storage-card">
+                            <div class="card-header">
+                                <img src="${account.avatar}" alt="Avatar" class="card-avatar">
+                                <div class="card-info">
+                                    <h3>${account.email}</h3>
+                                    <p>❌ Lỗi: ${account.data.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const data = account.data;
+                const usagePercentage = ((data.usedStorage / data.totalStorage) * 100).toFixed(1);
+
+                return `
+                    <div class="storage-card">
+                        <div class="card-header">
+                            <img src="${account.avatar}" alt="Avatar" class="card-avatar">
+                            <div class="card-info">
+                                <h3>${account.email}</h3>
+                                <p>${account.name} <span class="plan-badge">${data.planType}</span></p>
+                            </div>
+                        </div>
+
+                        <div class="storage-grid">
+                            <div class="storage-item">
+                                <div class="storage-label">Tổng dung lượng</div>
+                                <div class="storage-value">${formatBytes(data.totalStorage)}</div>
+                            </div>
+                            <div class="storage-item">
+                                <div class="storage-label">Đã sử dụng</div>
+                                <div class="storage-value">${formatBytes(data.usedStorage)}</div>
+                            </div>
+                            <div class="storage-item">
+                                <div class="storage-label">Còn lại</div>
+                                <div class="storage-value">${formatBytes(data.totalStorage - data.usedStorage)}</div>
+                            </div>
+                            <div class="storage-item">
+                                <div class="storage-label">% Sử dụng</div>
+                                <div class="storage-value">${usagePercentage}%</div>
+                            </div>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${usagePercentage}%"></div>
+                        </div>
+
+                        <div class="storage-grid">
+                            <div class="storage-item">
+                                <div class="storage-label">📁 Drive</div>
+                                <div class="storage-value">${formatBytes(data.driveUsage)}</div>
+                            </div>
+                            <div class="storage-item">
+                                <div class="storage-label">📧 Gmail</div>
+                                <div class="storage-value">${formatBytes(data.gmailUsage)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSummaryStats(results) {
+            const validResults = results.filter(r => !r.data.error);
+            const totalAccounts = validResults.length;
+            const totalStorage = validResults.reduce((sum, r) => sum + r.data.totalStorage, 0);
+            const totalUsed = validResults.reduce((sum, r) => sum + r.data.usedStorage, 0);
+            const avgUsage = totalAccounts > 0 ? ((totalUsed / totalStorage) * 100).toFixed(1) : 0;
+
+            const summaryStats = document.getElementById('summaryStats');
+            summaryStats.style.display = 'block';
+            summaryStats.innerHTML = `
+                <div class="summary-stats">
+                    <div class="summary-item">
+                        <div class="summary-value">${totalAccounts}</div>
+                        <div class="summary-label">Tài khoản đã kiểm tra</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${formatBytes(totalStorage)}</div>
+                        <div class="summary-label">Tổng dung lượng</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${formatBytes(totalUsed)}</div>
+                        <div class="summary-label">Đã sử dụng</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${avgUsage}%</div>
+                        <div class="summary-label">Sử dụng trung bình</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function exportResults() {
+            const connectedAccounts = accounts.filter(a => a.status === 'connected' && a.data && !a.data.error);
+            
+            if (connectedAccounts.length === 0) {
+                showMessage('Không có dữ liệu để xuất!', 'error');
+                return;
+            }
+
+            let csvContent = "Email,Tên,Gói,Tổng dung lượng (GB),Đã sử dụng (GB),Còn lại (GB),% Sử dụng,Drive (GB),Gmail (GB),Photos (GB)\n";
+            
+            connectedAccounts.forEach(account => {
+                const data = account.data;
+                const row = [
+                    account.email,
+                    account.name,
+                    data.planType,
+                    (data.totalStorage / (1024*1024*1024)).toFixed(2),
+                    (data.usedStorage / (1024*1024*1024)).toFixed(2),
+                    ((data.totalStorage - data.usedStorage) / (1024*1024*1024)).toFixed(2),
+                    ((data.usedStorage / data.totalStorage) * 100).toFixed(1),
+                    (data.driveUsage / (1024*1024*1024)).toFixed(2),
+                    (data.gmailUsage / (1024*1024*1024)).toFixed(2),
+                    (data.photosUsage / (1024*1024*1024)).toFixed(2)
+                ].join(',');
+                csvContent += row + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `google_drive_report_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showMessage('✅ Đã xuất báo cáo CSV thành công!', 'success');
+        }
+
+        function showWorkspaceInfo() {
+            showMessage(`
+                <strong>🏢 Google Workspace Admin API</strong><br><br>
+                Để kiểm tra tất cả tài khoản trong tổ chức:<br>
+                • Cần quyền Super Admin<br>
+                • Sử dụng Reports API<br>
+                • Domain-wide delegation<br>
+                • Chi phí: $6-18/user/tháng<br><br>
+                📖 Tài liệu: developers.google.com/admin-sdk
+            `, 'info');
+        }
+
+        function showScriptInfo() {
+            const scriptCode = `
+function checkMultipleDrives() {
+  // Google Apps Script code mẫu
+  const emails = ['user1@domain.com', 'user2@domain.com'];
+  const results = [];
+  
+  emails.forEach(email => {
+    try {
+      // Impersonate user (cần domain-wide delegation)
+      const oauth = ScriptApp.getOAuthToken();
+      const response = UrlFetchApp.fetch(
+        'https://www.googleapis.com/drive/v3/about?fields=storageQuota,user',
+        {
+          headers: {
+            'Authorization': 'Bearer ' + oauth,
+            'X-Goog-AuthUser': email
+          }
+        }
+      );
+      
+      const data = JSON.parse(response.getContentText());
+      results.push({
+        email: email,
+        quota: data.storageQuota,
+        user: data.user
+      });
+      
+    } catch (error) {
+      console.error('Error for ' + email + ': ' + error.message);
+    }
+  });
+  
+  return results;
+}
+            `;
+            
+            showMessage(`
+                <strong>📝 Google Apps Script Code Mẫu</strong><br><br>
+                <pre style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-size: 12px; overflow-x: auto;">${scriptCode}</pre>
+                <br>
+                ⚠️ Lưu ý: Cần thiết lập domain-wide delegation
+            `, 'info');
+        }
+
+        // Utility functions
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showMessage(message, type = 'info') {
+            const messageArea = document.getElementById('messageArea');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'info' ? 'warning' : 'warning';
+            
+            messageArea.innerHTML = `<div class="${className}">${message}</div>`;
+            messageArea.scrollIntoView({ behavior: 'smooth' });
+            
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, type === 'info' ? 10000 : 5000);
+        }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            renderAccountManager();
+            
+            // Sample Client ID placeholder
+            document.getElementById('clientId').placeholder = 'Ví dụ: 123456789-abc123def456ghi789jkl012mno345pqr678stu901.apps.googleusercontent.com';
+        });
+    </script>
+</body>
+</html>
